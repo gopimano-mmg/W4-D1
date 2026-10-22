@@ -1,0 +1,196 @@
+{
+  "name": "Unread Email Summariser",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "366ceca6-3a95-4ec9-98d5-2a25fd07018c",
+      "name": "Manual Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 5,
+        "filters": {
+          "readStatus": "unread"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "64ec20ac-54d2-49c1-a224-53a139c73a0d",
+      "name": "Get many messages",
+      "webhookId": "2b846630-0d5d-4cdf-8696-a6bcca2f6e72",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "f7mwJ944Nz27QeLA",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Write ONE line (20 words maximum) describing this email.\nNo greeting, no heading, no extra text.\n\nFrom: {{ $json.from }}\nSubject: {{ $json.subject }}\nPreview: {{ $json.snippet }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "d8ba154f-afa0-465c-a8db-dfbb478f6a23",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        320,
+        208
+      ],
+      "id": "b352d1ce-d757-486d-9e30-b1a4f37b89a9",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "mKzRhS1AJcxzFNe5",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "output"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        703.5,
+        0
+      ],
+      "id": "c6d8cc09-f08c-423d-a25a-ae832d80acd0",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "sendTo": "gopimano@gmail.com",
+        "subject": "Your 5 unread email",
+        "emailType": "text",
+        "message": "={{ $json.output.join('\\n\\n') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        928,
+        0
+      ],
+      "id": "83f9d1a3-9ad9-4781-a1d0-545877fa822f",
+      "name": "Send a message",
+      "webhookId": "8a137d31-4355-422e-aea9-ed5f28366c3d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "f7mwJ944Nz27QeLA",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d54d0528-9d21-4e4b-b8f4-2e9e9eca98d1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4b050d7ce0c5a266c762d90cc7c5e2fdacd1420a6befe33aa9f759d1f740a803"
+  },
+  "nodeGroups": [],
+  "id": "Mz6PHRX3ijxZokdi",
+  "tags": []
+}
